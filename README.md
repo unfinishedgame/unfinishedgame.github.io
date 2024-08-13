@@ -5,4 +5,4 @@ Don't expect any consistency, effort, or just general usability.
 
 
 
-Note: I had to delete the old one because it wasn't letting me upload my changes, but there wasn't really anything in there and I was the only one who ever saw it anyway so it shouldn't really matter
+<sup><sub>Note: I had to delete the old one because it wasn't letting me upload my changes, but there wasn't really anything in there and I was the only one who ever saw it anyway so it shouldn't really matter</sub></sup>
