@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My Website</title>
+        <style>
+            body {
+                background-color: white;
+                overflow: hidden;
+            }
+            canvas {
+                margin: 0px;
+                position: absolute;
+            }
+            .tiny {
+                font-size: x-small;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="loading-explanation">
+            <h1>Click anywhere to start loading</h1>
+            <p class="tiny">i need an audiocontext to process the file i fetched from the server and it requires user interaction to use one so just click</p>
+            <p class="tiny">if there's a workaround for this please tell me</p>
+        </div>
+        
+        <canvas id="startup-canvas"></canvas>
+        <script>
+            class LoadedAudio {
+                constructor(buffer) {
+                    this.buffer = buffer
+                    this._played = false
+                }
+                play() {
+                    const src = audioCtx.createBufferSource()
+                    src.buffer = this.buffer
+                    src.connect(audioCtx.destination)
+                    src.start()
+                }
+                playOnce() {
+                    if (this._played) return
+                    else {
+                        this.play()
+                        this._played = true
+                    }
+                }
+                reset() {
+                    this._played = false
+                }
+            }
+            class CustomMouseEvent {
+                constructor(event, type) {
+                    for (let i in event) {
+                        this[i] = event[i]
+                    }
+                    this._wasClick = (type == 'click')
+                }
+                takeClick(consume = true) {
+                    const clickAvailable = this._wasClick
+                    if (consume) this._wasClick = false
+                    return clickAvailable
+                }
+            }
+            const audioCtx = new AudioContext()
+
+
+            let begunLoading = false
+            const assetDirs = {
+                sounds: {
+                    startup: 'startup.mp3'
+                }
+            }
+            let assets = {}
+
+            let mouse
+            addEventListener('mousemove', function(event) {
+                mouse = new CustomMouseEvent(event, 'move')
+            })
+            addEventListener('click', function(event) {
+                mouse = new CustomMouseEvent(event, 'click')
+            })
+            function textHovered(text, x, y, ctx, centered = true) {
+                const metric = ctx.measureText(text)
+                const textX = x - (centered ? metric.actualBoundingBoxLeft : 0)
+                const textY = y - (centered ? metric.actualBoundingBoxAscent : 0)
+                const startWidth = metric.actualBoundingBoxLeft + metric.actualBoundingBoxRight
+                const startHeight = metric.actualBoundingBoxAscent + metric.actualBoundingBoxDescent
+                return mouse && mouse.pageX > textX && mouse.pageY > textY && mouse.pageX < startWidth + textX && mouse.pageY < startHeight + textY
+            }
+
+            async function load() {
+                begunLoading = true
+                document.querySelector("#loading-explanation").remove()
+                for (let i in assetDirs) {
+                    for (let j in assetDirs[i]) {
+                        let convert
+                        if (i == 'sounds') {
+                            convert = async function(file) {
+                                const buffer = await audioCtx.decodeAudioData(await file.arrayBuffer())
+                                
+                                return new LoadedAudio(buffer)
+                            }
+                        }
+                        if (!assets[i]) assets[i] = {}
+                        assets[i][j] = await convert(await fetch('/assets/' + i + '/' + assetDirs[i][j]))
+                    }
+                }
+            }
+            addEventListener('click', function() {
+                if (!begunLoading) {
+                    load()
+                    .then(startup)
+                    .catch(error => alert("something went wrong. please reload. if this is your fifth time reloading, report a bug. this was the error: \n\n" + error.message + "\n" + error.stack))
+                }
+            })
+            
+            function startup() {
+                const canvas = document.querySelector('#startup-canvas')
+                const ctx = canvas.getContext('2d')
+
+                let timer = 0
+                let lastFrame = Date.now()
+                let currentFrame, delta
+
+                let w, h
+                function resizeCanvas() {
+                    if (innerHeight * 16 / 9 <= innerWidth) {
+                        canvas.height = innerHeight
+                        canvas.width = innerHeight * 16 / 9
+                        canvas.style.top = '0px';
+                        canvas.style.left = (innerWidth - canvas.width) / 2 + 'px'
+                    } else {
+                        canvas.width = innerWidth
+                        canvas.height = innerWidth * 9 / 16
+                        canvas.style.left = '0px';
+                        canvas.style.top = (innerHeight - canvas.height) / 2 + 'px'
+                    }
+                    w = canvas.width
+                    h = canvas.height
+                }
+                resizeCanvas()
+
+                addEventListener('resize', resizeCanvas)
+                
+                function update() {
+                    timer += delta
+                }
+                function draw() {
+                    ctx.fillStyle = 'rgb(200, 200, 200)'
+                    ctx.fillRect(0, 0, w, h)
+                    
+                    if (timer > 700) {
+                        const col = Math.min(200, (timer - 700) / 10)
+                        ctx.strokeStyle = `rgb(${col}, ${col}, ${col})`
+                        ctx.strokeRect(w / 3, h / 20 * 7, w / 3, h / 3)
+
+                        assets.sounds.startup.playOnce()
+                    }
+                    ctx.font = w / 16 + 'px monospace'
+                    ctx.textAlign = 'center'
+                    ctx.fillStyle = 'black'
+                    ctx.fillText("Website".substring(0, (timer - 1000) / 100), w / 2, h / 2)
+                    
+                    ctx.font = w / 32 + 'px monospace'
+                    ctx.fillText("By me".substring(0, (timer - 2000) / 100), w / 2, h / 5 * 3)
+                    
+                    if (timer > 3000) {
+                        ctx.font = w / 16 + 'px monospace'
+                        if (textHovered("Open", w / 2, h / 4 * 3, ctx)) {
+                            ctx.fillStyle = 'darkgrey'
+                            if (mouse.takeClick(true)) {
+                                mainMenu()
+                            }
+                        } else ctx.fillStyle = 'grey'
+                        
+                        ctx.fillText("Open", w / 2, h / 4 * 3)
+                    }
+                }
+                function updateCanvas() {
+                    currentFrame = Date.now()
+                    delta = currentFrame - lastFrame
+
+                    ctx.clearRect(0, 0, w, h)
+                    update()
+                    draw()
+
+                    requestAnimationFrame(updateCanvas)
+                    lastFrame = Date.now()
+                }
+                updateCanvas()
+            }
+            function mainMenu() {
+                alert("congratulations! you made it to the main menu! (work in progress)")
+            }
+        </script>
+    </body>
+</html>
