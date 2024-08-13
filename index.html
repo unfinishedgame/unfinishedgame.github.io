@@ -48,20 +48,28 @@
                 }
             }
             class CustomMouseEvent {
+                static _awaitingClick = []
+                static requestClick(callback, id, hover) {
+                    let duplicate = false
+                    for (let i in CustomMouseEvent._awaitingClick) {
+                        if (CustomMouseEvent._awaitingClick[i].id == id) {
+                            duplicate = true
+                            break
+                        }
+                    }
+                    if (!duplicate) CustomMouseEvent._awaitingClick.push({callback: callback, id: id, hover: hover})
+                }
                 constructor(event, type) {
                     for (let i in event) {
                         this[i] = event[i]
                     }
-                    this._wasClick = (type == 'click')
-                }
-                takeClick(consume = true) {
-                    const clickAvailable = this._wasClick
-                    if (consume) this._wasClick = false
-                    return clickAvailable
+                    this.type = type
+                    if (this.type == 'click' && CustomMouseEvent._awaitingClick[0].hover.checkHovering()) {
+                        CustomMouseEvent._awaitingClick.shift().callback()
+                    }
                 }
             }
             const audioCtx = new AudioContext()
-
 
             let begunLoading = false
             const assetDirs = {
@@ -78,13 +86,21 @@
             addEventListener('click', function(event) {
                 mouse = new CustomMouseEvent(event, 'click')
             })
-            function textHovered(text, x, y, ctx, centered = true) {
-                const metric = ctx.measureText(text)
-                const textX = x - (centered ? metric.actualBoundingBoxLeft : 0)
-                const textY = y - (centered ? metric.actualBoundingBoxAscent : 0)
-                const startWidth = metric.actualBoundingBoxLeft + metric.actualBoundingBoxRight
-                const startHeight = metric.actualBoundingBoxAscent + metric.actualBoundingBoxDescent
-                return mouse && mouse.pageX > textX && mouse.pageY > textY && mouse.pageX < startWidth + textX && mouse.pageY < startHeight + textY
+            
+            class HoverableText {
+                constructor(metric, x, y, centered) {
+                    this.metric = metric
+                    this.x = x
+                    this.y = y
+                    this.centered = centered
+                }
+                checkHovering() {
+                    const textX = this.x - (this.centered ? this.metric.actualBoundingBoxLeft : 0)
+                    const textY = this.y - (this.centered ? this.metric.actualBoundingBoxAscent : 0)
+                    const startWidth = this.metric.actualBoundingBoxLeft + this.metric.actualBoundingBoxRight
+                    const startHeight = this.metric.actualBoundingBoxAscent + this.metric.actualBoundingBoxDescent
+                    return mouse && mouse.pageX > textX && mouse.pageY > textY && mouse.pageX < startWidth + textX && mouse.pageY < startHeight + textY
+                }
             }
 
             async function load() {
@@ -165,11 +181,12 @@
                     
                     if (timer > 3000) {
                         ctx.font = w / 16 + 'px monospace'
-                        if (textHovered("Open", w / 2, h / 4 * 3, ctx)) {
+                        const start = new HoverableText(ctx.measureText("Open"), w / 2, h / 4 * 3, true)
+
+                        CustomMouseEvent.requestClick(mainMenu, "mainMenu", start)
+
+                        if (start.checkHovering()) {
                             ctx.fillStyle = 'darkgrey'
-                            if (mouse.takeClick(true)) {
-                                mainMenu()
-                            }
                         } else ctx.fillStyle = 'grey'
                         
                         ctx.fillText("Open", w / 2, h / 4 * 3)
