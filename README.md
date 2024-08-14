@@ -4,5 +4,8 @@ My website is a website made by me. It's a place where I can put code that I wri
 Don't expect any consistency, effort, or just general usability.
 
 
+## Mobile Friendliness
+It has come to my attention that the website is not mobile-friendly. This is a feature, not a failure.
+
 
 <sup><sub>Note: I had to delete the old one because it wasn't letting me upload my changes, but there wasn't really anything in there and I was the only one who ever saw it anyway so it shouldn't really matter</sub></sup>
