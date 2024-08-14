@@ -64,7 +64,7 @@
                         this[i] = event[i]
                     }
                     this.type = type
-                    if (this.type == 'click' && CustomMouseEvent._awaitingClick[0].hover.checkHovering()) {
+                    if (this.type == 'click' && CustomMouseEvent._awaitingClick.length > 0 && (!CustomMouseEvent._awaitingClick[0].hover || CustomMouseEvent._awaitingClick[0].hover.checkHovering())) {
                         CustomMouseEvent._awaitingClick.shift().callback()
                     }
                 }
@@ -88,18 +88,22 @@
             })
             
             class HoverableText {
-                constructor(metric, x, y, centered) {
+                constructor(metric, x, y, canvas, centered) {
                     this.metric = metric
                     this.x = x
                     this.y = y
+                    this.canvas = canvas
                     this.centered = centered
                 }
                 checkHovering() {
+                    const up = this.canvas.style.top ? Number(this.canvas.style.top.substring(0, this.canvas.style.top.length - 2)) : 0
+                    const left = this.canvas.style.left ? Number(this.canvas.style.left.substring(0, this.canvas.style.left.length - 2)) : 0
+                    
                     const textX = this.x - (this.centered ? this.metric.actualBoundingBoxLeft : 0)
                     const textY = this.y - (this.centered ? this.metric.actualBoundingBoxAscent : 0)
                     const startWidth = this.metric.actualBoundingBoxLeft + this.metric.actualBoundingBoxRight
                     const startHeight = this.metric.actualBoundingBoxAscent + this.metric.actualBoundingBoxDescent
-                    return mouse && mouse.pageX > textX && mouse.pageY > textY && mouse.pageX < startWidth + textX && mouse.pageY < startHeight + textY
+                    return mouse && mouse.pageX - left > textX && mouse.pageY - up > textY && mouse.pageX - left < startWidth + textX && mouse.pageY - up < startHeight + textY
                 }
             }
 
@@ -128,11 +132,9 @@
                     .catch(error => alert("something went wrong. please reload. if this is your fifth time reloading, report a bug. this was the error: \n\n" + error.message + "\n" + error.stack))
                 }
             })
-            
             function startup() {
                 const canvas = document.querySelector('#startup-canvas')
                 const ctx = canvas.getContext('2d')
-
                 let timer = 0
                 let lastFrame = Date.now()
                 let currentFrame, delta
@@ -160,6 +162,7 @@
                 function update() {
                     timer += delta
                 }
+                
                 function draw() {
                     ctx.fillStyle = 'rgb(200, 200, 200)'
                     ctx.fillRect(0, 0, w, h)
@@ -181,10 +184,9 @@
                     
                     if (timer > 3000) {
                         ctx.font = w / 16 + 'px monospace'
-                        const start = new HoverableText(ctx.measureText("Open"), w / 2, h / 4 * 3, true)
+                        const start = new HoverableText(ctx.measureText("Open"), w / 2, h / 4 * 3, canvas, true)
 
                         CustomMouseEvent.requestClick(mainMenu, "mainMenu", start)
-
                         if (start.checkHovering()) {
                             ctx.fillStyle = 'darkgrey'
                         } else ctx.fillStyle = 'grey'
