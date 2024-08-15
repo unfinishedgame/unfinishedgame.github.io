@@ -61,15 +61,8 @@
             }
             class CustomMouseEvent {
                 static _awaitingClick = []
-                static requestClick(callback, id, hover) {
-                    let duplicate = false
-                    for (let i in CustomMouseEvent._awaitingClick) {
-                        if (CustomMouseEvent._awaitingClick[i].id == id) {
-                            duplicate = true
-                            break
-                        }
-                    }
-                    if (!duplicate) CustomMouseEvent._awaitingClick.push({callback: callback, id: id, hover: hover})
+                static requestClick(callback, hover) {
+                    CustomMouseEvent._awaitingClick.push({callback: callback, hover: hover})
                 }
                 constructor(event, type) {
                     for (let i in event) {
@@ -119,7 +112,7 @@
                     const left = this.canvas.style.left ? Number(this.canvas.style.left.substring(0, this.canvas.style.left.length - 2)) : 0
                     
                     const textX = this.x - (this.centered ? this.metric.actualBoundingBoxLeft : 0)
-                    const textY = this.y - (this.centered ? this.metric.actualBoundingBoxAscent : 0)
+                    const textY = this.y - this.metric.actualBoundingBoxAscent
                     const startWidth = this.metric.actualBoundingBoxLeft + this.metric.actualBoundingBoxRight
                     const startHeight = this.metric.actualBoundingBoxAscent + this.metric.actualBoundingBoxDescent
                     return mouse && mouse.pageX - left > textX && mouse.pageY - up > textY && mouse.pageX - left < startWidth + textX && mouse.pageY - up < startHeight + textY
@@ -204,6 +197,12 @@
             }
             let update, draw
             function startup() {
+                ctx.font = w / 16 + 'px monospace'
+                ctx.textAlign = 'center'
+                const start = new HoverableText(ctx.measureText("Open"), w / 2, h / 4 * 3, canvas, true)
+
+                CustomMouseEvent.requestClick(mainMenu, start)
+
                 update = function() {}
                 
                 draw = function() {
@@ -218,7 +217,6 @@
                         assets.sounds.startup.playOnce()
                     }
                     ctx.font = w / 16 + 'px monospace'
-                    ctx.textAlign = 'center'
                     ctx.fillStyle = 'black'
                     ctx.fillText("Website".substring(0, (timer - 1000) / 100), w / 2, h / 2)
                     
@@ -226,14 +224,11 @@
                     ctx.fillText("By me".substring(0, (timer - 2000) / 100), w / 2, h / 5 * 3)
                     
                     if (timer > 3000) {
-                        ctx.font = w / 16 + 'px monospace'
-                        const start = new HoverableText(ctx.measureText("Open"), w / 2, h / 4 * 3, canvas, true)
-
-                        CustomMouseEvent.requestClick(mainMenu, "mainMenu", start)
                         if (start.checkHovering()) {
                             ctx.fillStyle = 'darkgrey'
                         } else ctx.fillStyle = 'grey'
                         
+                        ctx.font = w / 16 + 'px monospace'
                         ctx.fillText("Open", w / 2, h / 4 * 3)
                     }
                 }
@@ -242,19 +237,23 @@
             }
             function mainMenu() {
                 assets.sounds.mainMenu.playOnce(true)
+
+                ctx.font = w / 20 + 'px monospace'
+                ctx.textAlign = 'center'
+                const potato = new HoverableText(ctx.measureText("What Kind Of Potato Are You?"), w / 2, h / 20 * 7, canvas, true)
+
+                CustomMouseEvent.requestClick(potatoTest, potato)
+
                 draw = function() {
                     ctx.fillStyle = 'rgb(200, 200, 200)'
                     ctx.fillRect(0, 0, w, h)
-
-                    ctx.font = w / 20 + 'px monospace'
                     ctx.textAlign = 'center'
-                    const potato = new HoverableText(ctx.measureText("What Kind Of Potato Are You?"), w / 2, h / 20 * 7, canvas, true)
-
-                    CustomMouseEvent.requestClick(potatoTest, "potatoTest", potato)
+                    
                     if (potato.checkHovering()) {
                         ctx.fillStyle = 'brown'
                     } else ctx.fillStyle = 'darkgoldenrod'
 
+                    ctx.font = w / 20 + 'px monospace'
                     ctx.fillText("What Kind Of Potato Are You?", w / 2, h / 20 * 7)
                     ctx.font = w / 40 + 'px monospace'
                     ctx.fillText("Take The Test:", w / 2, h / 40 * 11)
@@ -285,6 +284,11 @@
                 })
                 .then(() => mediaGranted = true)
                 .catch(() => mediaGranted = false)
+                
+                ctx.font = w / 40 + 'px monospace'
+                const back = new HoverableText(ctx.measureText("<-- Back"), w / 30, h / 15, canvas, false)
+                CustomMouseEvent.requestClick(mainMenu, back)
+
                 draw = function() {
                     ctx.fillStyle = 'rgb(200, 200, 200)'
                     ctx.fillRect(0, 0, w, h)
@@ -311,6 +315,14 @@
                         ctx.fillText(potatoTypes[typeOfPotato] + "!", w / 2, h / 2)
                         ctx.drawImage(assets.images[potatoImages[typeOfPotato]], w / 8 * 3, h / 3 * 2, w / 4, h / 4)
                     }
+
+                    ctx.textAlign = 'left'
+                    ctx.font = w / 40 + 'px monospace'
+                    
+                    if (back.checkHovering()) {
+                        ctx.fillStyle = 'darkgrey'
+                    } else ctx.fillStyle = 'grey'
+                    ctx.fillText("<-- Back", w / 30, h / 15)
                 }
             }
         </script>
