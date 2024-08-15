@@ -34,18 +34,24 @@
                     this.buffer = buffer
                     this._played = false
                 }
-                play() {
+                play(loop = false) {
                     if (!pageMuted) {
                         const src = audioCtx.createBufferSource()
                         src.buffer = this.buffer
                         src.connect(audioCtx.destination)
                         src.start()
+                        if (loop) {
+                            src.loop = true
+                            src.loopStart = 0
+                        } else {
+                            src.loop = false
+                        }
                     }
                 }
-                playOnce() {
+                playOnce(loop = false) {
                     if (this._played) return
                     else {
-                        this.play()
+                        this.play(loop)
                         this._played = true
                     }
                 }
@@ -80,7 +86,14 @@
             let begunLoading = false
             const assetDirs = {
                 sounds: {
-                    startup: 'startup.mp3'
+                    startup: 'startup.mp3',
+                    mainMenu: 'Welcome Home.mp3'
+                },
+                images: {
+                    hot: "hot.png",
+                    russet: "russet.webp",
+                    sweet: "sweet.jpg",
+                    yukonGold: "yukon gold.webp"
                 }
             }
             let assets = {}
@@ -112,6 +125,10 @@
                     return mouse && mouse.pageX - left > textX && mouse.pageY - up > textY && mouse.pageX - left < startWidth + textX && mouse.pageY - up < startHeight + textY
                 }
             }
+
+            function random(min, max) {
+                return Math.floor(Math.random() * (max - min)) + min
+            }
             
             function beginLoad() {
                 if (!begunLoading) {
@@ -131,6 +148,12 @@
                                 const buffer = await audioCtx.decodeAudioData(await file.arrayBuffer())
                                 
                                 return new LoadedAudio(buffer)
+                            }
+                        } else if (i == 'images') {
+                            convert = async function(file) {
+                                const img = new Image()
+                                img.src = file.url
+                                return img
                             }
                         }
                         if (!assets[i]) assets[i] = {}
@@ -218,7 +241,77 @@
                 updateCanvas()
             }
             function mainMenu() {
-                alert("congratulations! you made it to the main menu! (work in progress)")
+                assets.sounds.mainMenu.playOnce(true)
+                draw = function() {
+                    ctx.fillStyle = 'rgb(200, 200, 200)'
+                    ctx.fillRect(0, 0, w, h)
+
+                    ctx.font = w / 20 + 'px monospace'
+                    ctx.textAlign = 'center'
+                    const potato = new HoverableText(ctx.measureText("What Kind Of Potato Are You?"), w / 2, h / 20 * 7, canvas, true)
+
+                    CustomMouseEvent.requestClick(potatoTest, "potatoTest", potato)
+                    if (potato.checkHovering()) {
+                        ctx.fillStyle = 'brown'
+                    } else ctx.fillStyle = 'darkgoldenrod'
+
+                    ctx.fillText("What Kind Of Potato Are You?", w / 2, h / 20 * 7)
+                    ctx.font = w / 40 + 'px monospace'
+                    ctx.fillText("Take The Test:", w / 2, h / 40 * 11)
+                    ctx.fillStyle = 'red'
+                    ctx.font = w / 10 + 'px monospace'
+                    ctx.fillText("Featured!", w / 2, h / 5)
+                }
+            }
+            function potatoTest() {
+                timer = 0
+
+                const potatoTypes = [
+                    "Russet Potato",
+                    "Yukon Gold Potato",
+                    "Sweet Potato",
+                    "Hot Potato"
+                ]
+                const potatoImages = [
+                    "russet", "yukonGold", "sweet", "hot"
+                ]
+                const typeOfPotato = random(0, 4)
+
+                let posGranted, mediaGranted
+                navigator.geolocation.getCurrentPosition(() => posGranted = true, () => posGranted = false)
+                navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true
+                })
+                .then(() => mediaGranted = true)
+                .catch(() => mediaGranted = false)
+                draw = function() {
+                    ctx.fillStyle = 'rgb(200, 200, 200)'
+                    ctx.fillRect(0, 0, w, h)
+
+                    ctx.textAlign = 'center'
+                    ctx.fillStyle = 'black'
+                    ctx.font = w / 30 + 'px monospace'
+                    ctx.fillText("To start, let us figure out a few things about you.", w / 2, h / 5)
+                    ctx.font = w / 50 + 'px monospace'
+                    ctx.fillText("This may take a few moments. Please be patient.", w / 2, h / 4)
+                    if (posGranted === false) {
+                        ctx.font = w / 50 + 'px monospace'
+                        ctx.fillText("We're having trouble accessing your location...", w / 2, h / 5 * 4)
+                        ctx.fillText("We need your location to make our test as accurate as possible.", w / 2, h / 20 * 17)
+                    } else if (mediaGranted === false) {
+                        ctx.font = w / 50 + 'px monospace'
+                        ctx.fillText("We're having trouble accessing your camera and microphone...", w / 2, h / 5 * 4)
+                        ctx.fillText("We need your camera and mic to make our test as accurate as possible.", w / 2, h / 20 * 17)
+                    } else if (mediaGranted === true && posGranted === true) {
+                        ctx.font = w / 20 + 'px monospace'
+                        ctx.fillStyle = 'red'
+                        ctx.fillText("Test complete! You are a", w / 2, h / 20 * 7)
+                        ctx.font = w / 10 + 'px monospace'
+                        ctx.fillText(potatoTypes[typeOfPotato] + "!", w / 2, h / 2)
+                        ctx.drawImage(assets.images[potatoImages[typeOfPotato]], w / 8 * 3, h / 3 * 2, w / 4, h / 4)
+                    }
+                }
             }
         </script>
     </body>
