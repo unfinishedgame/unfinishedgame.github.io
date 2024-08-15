@@ -18,23 +18,29 @@
     </head>
     <body>
         <div id="loading-explanation">
-            <h1>Click anywhere to start loading</h1>
+            <h1>Click a button to start loading</h1>
             <p class="tiny">i need an audiocontext to process the file i fetched from the server and it requires user interaction to use one so just click</p>
             <p class="tiny">if there's a workaround for this please tell me</p>
+            <button onclick="(function() {pageMuted = true; beginLoad()})()">Click this to mute the page and start</button>
+            <button onclick="beginLoad()">Click this to start</button>
         </div>
         
         <canvas id="startup-canvas"></canvas>
         <script>
+            let pageMuted = false
             class LoadedAudio {
                 constructor(buffer) {
                     this.buffer = buffer
                     this._played = false
                 }
                 play() {
-                    const src = audioCtx.createBufferSource()
-                    src.buffer = this.buffer
-                    src.connect(audioCtx.destination)
-                    src.start()
+                    console.log(pageMuted)
+                    if (!pageMuted) {
+                        const src = audioCtx.createBufferSource()
+                        src.buffer = this.buffer
+                        src.connect(audioCtx.destination)
+                        src.start()
+                    }
                 }
                 playOnce() {
                     if (this._played) return
@@ -107,6 +113,13 @@
                 }
             }
             
+            function beginLoad() {
+                if (!begunLoading) {
+                    load()
+                    .then(startup)
+                    .catch(error => alert("something went wrong. please reload. if this is your fifth time reloading, report a bug. this was the error: \n\n" + error.message + "\n" + error.stack))
+                }
+            }
             async function load() {
                 begunLoading = true
                 document.querySelector("#loading-explanation").remove()
@@ -125,13 +138,6 @@
                     }
                 }
             }
-            addEventListener('click', function() {
-                if (!begunLoading) {
-                    load()
-                    .then(startup)
-                    .catch(error => alert("something went wrong. please reload. if this is your fifth time reloading, report a bug. this was the error: \n\n" + error.message + "\n" + error.stack))
-                }
-            })
             function startup() {
                 const canvas = document.querySelector('#startup-canvas')
                 const ctx = canvas.getContext('2d')
