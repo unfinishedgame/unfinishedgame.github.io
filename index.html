@@ -8,6 +8,7 @@
                 overflow: hidden;
             }
             canvas {
+                z-index: -1;
                 margin: 0px;
                 position: absolute;
             }
@@ -25,7 +26,7 @@
             <button onclick="beginLoad()">Click this to start</button>
         </div>
         
-        <canvas id="startup-canvas"></canvas>
+        <canvas id="canvas"></canvas>
         <script>
             let pageMuted = false
             class LoadedAudio {
@@ -34,7 +35,6 @@
                     this._played = false
                 }
                 play() {
-                    console.log(pageMuted)
                     if (!pageMuted) {
                         const src = audioCtx.createBufferSource()
                         src.buffer = this.buffer
@@ -138,38 +138,52 @@
                     }
                 }
             }
-            function startup() {
-                const canvas = document.querySelector('#startup-canvas')
-                const ctx = canvas.getContext('2d')
-                let timer = 0
-                let lastFrame = Date.now()
-                let currentFrame, delta
+            const canvas = document.querySelector('#canvas')
+            const ctx = canvas.getContext('2d')
+            let timer = 0
+            let lastFrame, currentFrame, delta
 
-                let w, h
-                function resizeCanvas() {
-                    if (innerHeight * 16 / 9 <= innerWidth) {
-                        canvas.height = innerHeight
-                        canvas.width = innerHeight * 16 / 9
-                        canvas.style.top = '0px';
-                        canvas.style.left = (innerWidth - canvas.width) / 2 + 'px'
-                    } else {
-                        canvas.width = innerWidth
-                        canvas.height = innerWidth * 9 / 16
-                        canvas.style.left = '0px';
-                        canvas.style.top = (innerHeight - canvas.height) / 2 + 'px'
-                    }
-                    w = canvas.width
-                    h = canvas.height
+            let w, h
+            function resizeCanvas() {
+                if (innerHeight * 16 / 9 <= innerWidth) {
+                    canvas.height = innerHeight
+                    canvas.width = innerHeight * 16 / 9
+                    canvas.style.top = '0px';
+                    canvas.style.left = (innerWidth - canvas.width) / 2 + 'px'
+                } else {
+                    canvas.width = innerWidth
+                    canvas.height = innerWidth * 9 / 16
+                    canvas.style.left = '0px';
+                    canvas.style.top = (innerHeight - canvas.height) / 2 + 'px'
                 }
-                resizeCanvas()
+                w = canvas.width
+                h = canvas.height
+            }
+            resizeCanvas()
 
-                addEventListener('resize', resizeCanvas)
-                
-                function update() {
+            addEventListener('resize', resizeCanvas)
+            function updateCanvas() {
+                try {
+                    currentFrame = Date.now()
+                    delta = currentFrame - lastFrame
+
+                    ctx.clearRect(0, 0, w, h)
                     timer += delta
+                    update()
+                    draw()
+
+                    requestAnimationFrame(updateCanvas)
+                    lastFrame = Date.now()
+                } catch (e) {
+                    alert("OH NO ERROR AHHHHHHHHHHHHHHHHHHHHH\n" + e.message + "\n" + e.stack)
+                    alert("(just reload the page and report the bug)")
                 }
+            }
+            let update, draw
+            function startup() {
+                update = function() {}
                 
-                function draw() {
+                draw = function() {
                     ctx.fillStyle = 'rgb(200, 200, 200)'
                     ctx.fillRect(0, 0, w, h)
                     
@@ -200,17 +214,7 @@
                         ctx.fillText("Open", w / 2, h / 4 * 3)
                     }
                 }
-                function updateCanvas() {
-                    currentFrame = Date.now()
-                    delta = currentFrame - lastFrame
-
-                    ctx.clearRect(0, 0, w, h)
-                    update()
-                    draw()
-
-                    requestAnimationFrame(updateCanvas)
-                    lastFrame = Date.now()
-                }
+                lastFrame = Date.now()
                 updateCanvas()
             }
             function mainMenu() {
