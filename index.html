@@ -353,6 +353,8 @@
                 let lines
                 let updateLoc
 
+                let canvasBg = 'white'
+
                 addEventListener('keydown', function(event) {
                     if (event.key == 'ArrowUp') BUTTONS[0] = true
                     if (event.key == 'ArrowLeft') BUTTONS[1] = true
@@ -430,6 +432,12 @@
                         console.log(longTerm, shortTerm)
                     } else if (command == "NOP") {
                         
+                    } else if (command == "SYS") {
+                        if (params[0] == 0) {
+                            document.title = params[1].replace("_", " ") + " - Virtual Console"
+                        } else if (params[0] == 1) {
+                            canvasBg = params[1]
+                        }
                     }
                 }
 
@@ -478,6 +486,10 @@
                         programDelta += delta
                         if (programDelta > 1000 / targetFrameRate) {
                             programDelta = 0
+
+                            ctx.fillStyle = canvasBg
+                            ctx.fillRect(0, 0, w, h)
+
                             for (let i = updateLoc;; i++) {
                                 let line = lines[i]
                                 line = line.replace(/\t/, "")

@@ -58,6 +58,12 @@ The website now contains a virtual console. This feature is a work in progress t
             BTN 10 7
   * DBG: Takes no parameters and prints out the contents of long term memory and short term memory to the browser's console.
   * NOP: Does nothing.
+  * SYS: Takes two parameters: a system property, and a value. The available properties are:
+      - 0: The name of the program. For the value, underscores are replaced with spaces.
+      - 1: The background color the program uses.
+
+            # Set the title of the program to "Hello World"
+            SYS 0 Hello_World
 
 Long term memory goes from addresses 0 to 255. Short term memory is addressed from 0 to 15. "Values" as described here are signed 8-bit integers and do not describe memory locations.
 
