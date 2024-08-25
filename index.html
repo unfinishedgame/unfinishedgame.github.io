@@ -409,7 +409,7 @@
                     } else if (command == "DIV") {
                         longTerm[Number(params[0])] = Math.ceil(longTerm[Number(params[0])] / Number(params[1]))
                     } else if (command == "DLA") {
-                        longTerm[Number(params[0])] = delta
+                        targetFrameRate = Number(params[0])
                     } else if (command == "JMP") {
                         if (params[0] == params[1]) {
                             for (let i = SUBROUTINES[params[2]];; i++) {
@@ -469,16 +469,27 @@
                     }
                     reader.onerror = () => alert("There was an error trying to work with this file.")
                 })
-
+                let programDelta = 0
+                let targetFrameRate = 30
+                let lastCanvas = canvas.cloneNode()
+                let lastCanvasCtx = lastCanvas.getContext('2d')
                 draw = function() {
                     if (programRunning) {
-                        for (let i = updateLoc;; i++) {
-                            let line = lines[i]
-                            line = line.replace(/\t/, "")
-                            if (line[0] == "#") continue
+                        programDelta += delta
+                        if (programDelta > 1000 / targetFrameRate) {
+                            programDelta = 0
+                            for (let i = updateLoc;; i++) {
+                                let line = lines[i]
+                                line = line.replace(/\t/, "")
+                                if (line[0] == "#") continue
 
-                            if (line == "!endspecial") break
-                            parseLine(line)
+                                if (line == "!endspecial") break
+                                parseLine(line)
+                            }
+                            lastCanvasCtx.clearRect(0, 0, w, h)
+                            lastCanvasCtx.drawImage(canvas, 0, 0)
+                        } else {
+                            ctx.drawImage(lastCanvas, 0, 0)
                         }
                     } else {
                         ctx.fillStyle = 'rgb(200, 200, 200)'
