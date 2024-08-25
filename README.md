@@ -38,10 +38,12 @@ The website now contains a virtual console. This feature is a work in progress t
     
         # Divides the number stored at location 4 by five and rounds up the result
         DIV 4 5
-    DLA: Takes one parameter: a target frame rate. Tries to match the frame rate of the program to that frame rate whenever possible. The default value is 30.
+  * DLA: Takes one parameter: a target frame rate. Tries to match the frame rate of the program to that frame rate whenever possible. The default value is 30.
+  
         # Set target frame rate of program to 60 fps
         DLA 60
-    JMP: Takes three parameters: the first two are values and if they are equal, the third parameter, a subroutine, is called.
+  * JMP: Takes three parameters: the first two are values and if they are equal, the third parameter, a subroutine, is called.
+
         # Go to subroutine "gameover" if location 5 equals 0
         JMP $5 0 :gameover
   * CMP: Takes three parameters: the first two are values and if the first is greater than the second, the third parameter, a subroutine, is called.
@@ -96,9 +98,9 @@ The syntax is as follows:
         # Add the value of the short term memory register 5 to long term memory location 0
         ADD 0 $5
 
-    These are some important bits of information that are useful to know:
-        1. The size of the screen is 128x72 pixels, with the bottom right most corner being at 127, 71.
-        2. Memory registers hold signed 8-bit integers, meaning they go from -128 to 128. The fact that they are integers means that division will not be accurate and should not be used for anything precise. Long term memory has 256 registers and short term memory has 16.
-        3. Most commands that provide an output write the output to long term memory. If you want to use the output, it needs to be transferred to short term memory with the LOD command.
+These are some important bits of information that are useful to know:
+1. The size of the screen is 128x72 pixels, with the bottom right most corner being at 127, 71.
+2. Memory registers hold signed 8-bit integers, meaning they go from -128 to 128. The fact that they are integers means that division will not be accurate and should not be used for anything precise. Long term memory has 256 registers and short term memory has 16.
+3. Most commands that provide an output write the output to long term memory. If you want to use the output, it needs to be transferred to short term memory with the LOD command.
     
 To run your file in the virtual console, navigate to the main menu, go to the virtual console page, and drag the code file out of your file manager and into the window. This will run the program. If your code has bugs, it might not always show as an error and may instead silently crash, or it may display a cryptic error message that forces you to look through the implementation of the virtual console to find out what may be causing the issue. This is fairly useless advice, but try to not have bugs in your code.
