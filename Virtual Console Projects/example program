@@ -1,0 +1,86 @@
+# VALUES
+# RAM 0 is the y velocity.
+# RAM 1 is the x position.
+# RAM 2 is the y position.
+# RAM 10 stores input.
+
+# Called when the program starts or is reset
+!start
+	SAV 0 0
+	SAV 1 1
+	SAV 2 0
+
+	LOD 0 0
+	LOD 1 1
+	LOD 2 2
+!endspecial
+
+:drawFloor
+	LOD 3 3
+	VID $3 69 green
+	VID $3 70 green
+	VID $3 71 green
+	ADD 3 1
+	CMP 127 $3 :drawFloor
+END
+
+:stopFloorCollision
+	SAV 0 0
+	LOD 0 0
+	SUB 2 1
+	LOD 2 2
+	CMP $2 68 :stopFloorCollision
+END
+:applyGravity
+	ADD 0 1
+	LOD 0 0
+	ADD 2 $0
+	LOD 2 2
+	CMP $2 68 :stopFloorCollision
+END
+:moveLeft
+	SUB 1 1
+	LOD 1 1
+	CMP 0 $1 :bringIntoLeftBound
+END
+:moveRight
+	ADD 1 1
+	SUB 1 64
+	LOD 1 1
+	CMP $1 63 :bringIntoRightBound
+	ADD 1 64
+	LOD 1 1
+END
+:bringIntoLeftBound
+	SAV 1 0
+	LOD 1 1
+END
+:bringIntoRightBound
+	SAV 1 63
+	LOD 1 1
+END
+
+:goUp
+	JMP $2 68 :jump
+END
+:jump
+	SAV 0 -5
+	LOD 0 0
+END
+
+# Called every frame by the system
+!update
+	JMP 0 0 :drawFloor
+
+	BTN 10 1
+	LOD 10 10
+	JMP $10 1 :moveLeft
+	BTN 10 3
+	LOD 10 10
+	JMP $10 1 :moveRight
+	BTN 10 0
+	LOD 10 10
+	JMP $10 1 :goUp
+	JMP 0 0 :applyGravity
+	VID $1 $2 black
+!endspecial
