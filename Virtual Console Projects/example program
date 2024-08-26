@@ -7,6 +7,9 @@
 # Called when the program starts or is reset
 !start
 	DLA 60
+	SYS 0 Example_Program
+	SYS 1 lightblue
+
 	SAV 0 0
 	SAV 1 1
 	SAV 2 0
