@@ -348,6 +348,7 @@
                 const longTerm = new Int8Array(256)
                 const shortTerm = new Int8Array(16)
                 const SUBROUTINES = {}
+                const LOOPS = {}
                 const BUTTONS = [false, false, false, false, false, false, false, false]
                 let programRunning = false
                 let lines
@@ -380,18 +381,66 @@
                     if (event.key == 'Enter') BUTTONS[7] = false
                 })
 
-                function parseLine(line) {
+                function processLine(line) {
                     line = line.replace(/\t/, "")
                     if (line[0] == "#") return
 
-                    let command = line.substring(0, 3)
+                    let command = line[0] == ">" ? line.substring(1, 4) : line.substring(0, 3)
                     let params = line.split(" ")
                     params.shift()
+
                     for (let i in params) {
                         if (params[i][0] == "$") {
                             params[i] = shortTerm[Number(params[i].slice(1))]
                         }
                     }
+
+                    return {
+                        line: line, command: command, params: params
+                    }
+                }
+                function conditionalValue(type, params) {
+                    if (type == "JMP" && params[0] == params[1]) return true
+                    if (type == "CMP" && Number(params[0]) > Number(params[1])) return true
+                    return false
+                }
+                function handleJump(subroutine) {
+                    if (SUBROUTINES[subroutine]) {
+                        for (let i = SUBROUTINES[subroutine];; i++) {
+                            line = processLine(lines[i])?.line
+
+                            if (lines[i].substring(0, 3) == "END") break
+                            parseLine(lines[i])
+                        }
+                    } else if (LOOPS[subroutine]) {
+                        let end
+                        let condition
+                        for (let i = LOOPS[subroutine];; i++) {
+                            lineInfo = processLine(lines[i])
+                            if (!lineInfo) continue
+
+                            if (lineInfo.line[0] == ">") condition = {index: i, command: lineInfo.command}
+                            if (lines[i].substring(0, 3) == "END") {
+                                end = i
+                                break
+                            }
+                        }
+                        condition.line = processLine(lines[condition.index])
+
+                        do {
+                            for (let i = LOOPS[subroutine]; i < end; i++) {
+                                parseLine(lines[i])
+                                condition.line = processLine(lines[condition.index])
+                            }
+                        } while (conditionalValue(condition.command, condition.line.params))
+                    }
+                }
+                function parseLine(line) {
+                    const lineInfo = processLine(line)
+                    if (!lineInfo) return
+                    line = lineInfo.line
+                    let command = lineInfo.command
+                    let params = lineInfo.params
 
                     if (command == "SAV") {
                         longTerm[Number(params[0])] = Number(params[1])
@@ -402,6 +451,10 @@
                         const xPos = w / 128 * Number(params[0])
                         const yPos = w / 128 * Number(params[1])
                         ctx.fillRect(xPos, yPos, w / 128, w / 128)
+                    } else if (command == "ROW") {
+                        ctx.fillStyle = params[1]
+                        const yPos = w / 128 * Number(params[0])
+                        ctx.fillRect(0, yPos, w, w / 128)
                     } else if (command == "ADD") {
                         longTerm[Number(params[0])] += Number(params[1])
                     } else if (command == "SUB") {
@@ -412,19 +465,9 @@
                         longTerm[Number(params[0])] = Math.ceil(longTerm[Number(params[0])] / Number(params[1]))
                     } else if (command == "DLA") {
                         targetFrameRate = Number(params[0])
-                    } else if (command == "JMP") {
-                        if (params[0] == params[1]) {
-                            for (let i = SUBROUTINES[params[2]];; i++) {
-                                if (lines[i].substring(0, 3) == "END") break
-                                parseLine(lines[i])
-                            }
-                        }
-                    } else if (command == "CMP") {
-                        if (Number(params[0]) > Number(params[1])) {
-                            for (let i = SUBROUTINES[params[2]];; i++) {
-                                if (lines[i].substring(0, 3) == "END") break
-                                parseLine(lines[i])
-                            }
+                    } else if (command == "JMP" || command == "CMP") {
+                        if (conditionalValue(command, params)) {
+                            handleJump(params[2])
                         }
                     } else if (command == "BTN") {
                         longTerm[Number(params[0])] = Number(BUTTONS[Number(params[1])])
@@ -471,7 +514,11 @@
                             else if (line.includes("!update")) updateLoc = i
 
                             if (line[0] == ":") {
-                                SUBROUTINES[line] = i
+                                if (line[1] == "<") {
+                                    LOOPS[line] = i
+                                } else {
+                                    SUBROUTINES[line] = i
+                                }
                             }
                         }
                     }

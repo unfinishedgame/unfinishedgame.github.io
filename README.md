@@ -22,6 +22,10 @@ The website now contains a virtual console. This feature is a work in progress t
     
         # Places a green pixel around the middle of the screen.
         VID 64 36 green
+  * ROW: Takes two parameters: a y position, and a color, which is passed directly to ctx.fillStyle. Fills the row at that y position.
+
+        # Fills the top row light blue
+        ROW 0 lightblue
   * ADD: Takes two parameters: a memory location in long term memory, and a value to add to the value stored there.
     
         # Adds five to the number stored at location 4
@@ -88,7 +92,18 @@ The syntax is as follows:
         :doSomething
             # do something!
         END
-  Note that indentation is not required in subroutines and is stripped when the line is processed.
+       Note that indentation is not required in subroutines and is stripped when the line is processed.
+
+   * Recursive subroutines can optionally use a special syntax, which tells the interpreter to represent it internally as a loop.
+      
+         # loops until location 0 is no longer less than 10
+         :<countToTen
+            ADD 0 1
+            LOD 0 0
+            # the > operator at the beginning declares this as the condition for the loop
+            >CMP 10 $0
+         END
+      This syntax is completely optional and only needs to be used if you're worried about stack overflows or performance issues.
 
   * Commands are run by entering the command in all caps, and then the parameters seperated by spaces.
     
