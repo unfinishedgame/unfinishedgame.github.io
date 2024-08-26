@@ -8,7 +8,6 @@
 !start
 	DLA 60
 	SYS 0 Example_Program
-	SYS 1 lightblue
 
 	SAV 0 0
 	SAV 1 1
@@ -19,13 +18,16 @@
 	LOD 2 2
 !endspecial
 
+:<drawBg
+	LOD 4 4
+	ROW $4 lightblue
+	ADD 4 1
+	>CMP 71 $4
+END
 :drawFloor
-	LOD 3 3
-	VID $3 69 green
-	VID $3 70 green
-	VID $3 71 green
-	ADD 3 1
-	CMP 127 $3 :drawFloor
+	ROW 69 green
+	ROW 70 green
+	ROW 71 green
 END
 
 :stopFloorCollision
@@ -74,6 +76,9 @@ END
 
 # Called every frame by the system
 !update
+	SAV 3 -64
+	SAV 4 0
+	JMP 0 0 :<drawBg
 	JMP 0 0 :drawFloor
 
 	BTN 10 1
