@@ -60,6 +60,10 @@ The website now contains a virtual console. This feature is a work in progress t
     
             # Puts a 1 in memory location 10 if the START button is pressed, otherwise a 0
             BTN 10 7
+  * PLY: Takes two parameters: the name of an audio and a 0/1 representing weither it should loop or not, with 1 meaning that it should and 0 meaning it shouldn't.
+
+        # Plays the audio mySong on loop
+        PLY mySong 1
   * DBG: Takes no parameters and prints out the contents of long term memory and short term memory to the browser's console.
   * NOP: Does nothing.
   * SYS: Takes two parameters: a system property, and a value. The available properties are:
@@ -78,7 +82,7 @@ The syntax is as follows:
         # This is a comment!!!
         SAV 0 16    # This, unfortunately, is not, because it comes in the middle of a line.
     
-  * There are two special subroutines: start and update. These are declared with an exclamation mark and ended with an "!endspecial":
+  * There are three special functions: start, update, and audio. These are declared with an exclamation mark and ended with an "!endspecial":
     
         !start
             # do something as soon as the program is loaded
@@ -86,6 +90,10 @@ The syntax is as follows:
 
         !update
             # do something every frame the program is active
+        !endspecial
+
+        !audio myAudio
+            # create some audio
         !endspecial
   * Regular subroutines are declared with a colon and ended with an "END":
     
@@ -118,6 +126,33 @@ The syntax is as follows:
         ADD 0 1
         # Add the value of the short term memory register 5 to long term memory location 0
         ADD 0 $5
+  * Audio can be played using the audio sub-syntax, which is used inside !audio tags. Each line has five pieces of information: 
+      1. The type of wave to use. The options are square, triangle, sine, and sawtooth.
+      2. The track to play on. There are four tracks total, and while each track can have multiple instruments/notes playing on it simultaneously, it can only have one volume. 
+      3. The frequency of the wave. Tools exist online to see which frequency corresponds to what note.
+      4. When the note begins. Zero is when the audio is first played, and after that, it's measured as a delay in seconds. 
+      5. The duration of the note. This is also measured in seconds.
+
+             !audio aSongIMade
+                  # With a sine wave, play A for a second, and then B
+                  sine 0 440 0 1
+                  sine 0 493.88 1 1
+             !endspecial
+      To set the volume for all notes after it, use /volume. The volume inputted is multiplied by the default volume to get the final volume, so a value of 0.5 would make the volume half of the default and 2 would double it.
+
+        !audio playingWithVolume
+            # set the volume to half of the normal volume
+            /volume 0.5
+            triangle 0 440 0 0.5
+
+            # set it to 10 times the normal volume (not recommended for safety reasons)
+            /volume 10
+            triangle 0 440 0.5 0.5
+
+            # if i play a note on another track, that track's volume is now also 10
+            triangle 1 440 1 0.5
+        !endspecial
+      The audio can be addressed with the name that comes after "!audio". For the example above, that would be "playingWithVolume". Audio is played with the PLY command, so this would be played with "PLY playingWithVolume 0".
 
 These are some important bits of information that are useful to know:
 1. The size of the screen is 128x72 pixels, with the bottom right most corner being at 127, 71.
