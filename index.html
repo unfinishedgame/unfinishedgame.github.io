@@ -358,10 +358,10 @@
                 const LOOPS = {}
                 const BUTTONS = [false, false, false, false, false, false, false, false]
 
+                const defaultVolume = 0.05
+                const AUDIO = {}
+                const TRACKS = []
                 if (!pageMuted) {
-                    const defaultVolume = 0.05
-                    const AUDIO = {}
-                    const TRACKS = []
                     for (let i = 0; i < 5; i++) {
                         TRACKS[i] = resetGain()
                     }
