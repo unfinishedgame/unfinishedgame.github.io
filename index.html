@@ -349,7 +349,8 @@
                 }
             }
             function virtualConsole() {
-                assets.sounds.mainMenu.stop()
+                if (!pageMuted)
+                    assets.sounds.mainMenu.stop()
 
                 const longTerm = new Int8Array(256)
                 const shortTerm = new Int8Array(16)
@@ -357,11 +358,13 @@
                 const LOOPS = {}
                 const BUTTONS = [false, false, false, false, false, false, false, false]
 
-                const defaultVolume = 0.05
-                const AUDIO = {}
-                const TRACKS = []
-                for (let i = 0; i < 5; i++) {
-                    TRACKS[i] = resetGain()
+                if (!pageMuted) {
+                    const defaultVolume = 0.05
+                    const AUDIO = {}
+                    const TRACKS = []
+                    for (let i = 0; i < 5; i++) {
+                        TRACKS[i] = resetGain()
+                    }
                 }
 
                 let programRunning = false
@@ -469,11 +472,13 @@
                     }
                 }
                 function playAudio(audio, loop) {
-                    for (let i in AUDIO[audio]) {
-                        const note = AUDIO[audio][i]
-                        const node = playNote(note[0], note[1], note[2], note[3], note[4], note[5])
-                        if (loop == "1" && i == AUDIO[audio].length - 1) {
-                            node.onended = () => playAudio(audio, loop)
+                    if (!pageMuted) {
+                        for (let i in AUDIO[audio]) {
+                            const note = AUDIO[audio][i]
+                            const node = playNote(note[0], note[1], note[2], note[3], note[4], note[5])
+                            if (loop == "1" && i == AUDIO[audio].length - 1) {
+                                node.onended = () => playAudio(audio, loop)
+                            }
                         }
                     }
                 }
@@ -548,7 +553,7 @@
                             line = line.replace(/\t/, "")
                             if (line[0] == "#") continue
 
-                            if (line.includes("!audio")) {
+                            if (line.includes("!audio") && !pageMuted) {
                                 AUDIO[line.split(" ")[1]] = []
                                 let currVolume = 1
                                 for (let j = Number(i) + 1;; j++) {
