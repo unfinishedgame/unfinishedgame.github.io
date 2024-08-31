@@ -68,7 +68,6 @@ The website now contains a virtual console. This feature is a work in progress t
   * NOP: Does nothing.
   * SYS: Takes two parameters: a system property, and a value. The available properties are:
       - 0: The name of the program. For the value, underscores are replaced with spaces.
-      - 1: The background color the program uses.
 
             # Set the title of the program to "Hello World"
             SYS 0 Hello_World
