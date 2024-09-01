@@ -60,7 +60,7 @@ The website now contains a virtual console. This feature is a work in progress t
     
             # Puts a 1 in memory location 10 if the START button is pressed, otherwise a 0
             BTN 10 7
-  * PLY: Takes two parameters: the name of an audio and a 0/1 representing weither it should loop or not, with 1 meaning that it should and 0 meaning it shouldn't.
+  * PLY: Takes two parameters: the name of an audio and a 0/1 representing whether it should loop or not, with 1 meaning that it should and 0 meaning it shouldn't.
 
         # Plays the audio mySong on loop
         PLY mySong 1
